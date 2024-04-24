@@ -98,7 +98,8 @@ public class BookServiceImpl implements BookService{
 		
 	}
 	
-	public List<Book> recommendBooksByGenre(Long userId) {
+	@Override
+	public List<BookResponseDTO> recommendBooksByGenre(Long userId) {
 	    User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
 	    Set<String> favoriteGenres = user.getFavoriteBooks().stream()
                 .map(Book::getGenre)
@@ -108,7 +109,7 @@ public class BookServiceImpl implements BookService{
 	        .filter(book -> favoriteGenres.contains(book.getGenre()) && !user.getFavoriteBooks().contains(book))
 	        .limit(20).toList();
 
-	    return recommendedBooks;
+	    return recommendedBooks.stream().map(book -> modelMapper.map(book, BookResponseDTO.class)).toList();
 	}
 
 

@@ -77,5 +77,12 @@ public class BookController {
     	bookService.removeFromFavorites(userId, bookId);
     	return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/recommended")
+    public ResponseEntity<List<BookResponseDTO>> getRecommendedBooks(){
+    	Long userId = authorizationService.getUserIdFromUsername();
+    	List<BookResponseDTO> recommendedBooks = bookService.recommendBooksByGenre(userId);
+		return ResponseEntity.ok(recommendedBooks);
+    }
 
 }
