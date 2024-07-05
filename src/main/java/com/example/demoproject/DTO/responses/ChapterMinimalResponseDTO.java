@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 class ChapterMinimalResponseDTO {
     private Long chapterId;
     private String title;
+    private Boolean isPublished;
 }

@@ -22,5 +22,5 @@ public class BookResponseDTO {
     private UserMinimalResponseDTO user; 
     private List<ChapterMinimalResponseDTO> chapters;
     private List<RatingResponseDTO> ratings;
-    private List<CommentResponseDTO> comments; // make a minimal dto for comments w/out book check if chapter can stay
+    private List<CommentResponseDTO> comments; 
 }

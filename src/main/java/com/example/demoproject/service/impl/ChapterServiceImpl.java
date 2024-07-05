@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.example.demoproject.DTO.requests.ChapterRequestDTO;
 import com.example.demoproject.DTO.requests.ChapterUpdateRequestDTO;
 import com.example.demoproject.DTO.responses.ChapterResponseDTO;
+import com.example.demoproject.config.security.AuthorizationService;
 import com.example.demoproject.dao.BookRepository;
 import com.example.demoproject.dao.ChapterRepository;
 import com.example.demoproject.model.Book;
@@ -24,6 +25,7 @@ public class ChapterServiceImpl implements ChapterService{
 	private final ChapterRepository chapterRepository;
 	private final BookRepository bookRepository;
 	private final ModelMapper modelMapper;
+	private final AuthorizationService authorizationService;
 	
 	@Override
 	public ChapterResponseDTO createChapter(Long bookId, ChapterRequestDTO chapterRequestDTO) {
@@ -32,6 +34,7 @@ public class ChapterServiceImpl implements ChapterService{
 		
 		Chapter newChapter = modelMapper.map(chapterRequestDTO, Chapter.class);
 		newChapter.setBook(book);
+		newChapter.setIsPublished(false);
 		chapterRepository.save(newChapter);
 		return modelMapper.map(newChapter, ChapterResponseDTO.class);
 	}
@@ -47,7 +50,14 @@ public class ChapterServiceImpl implements ChapterService{
 	public List<ChapterResponseDTO> getAllChaptersByBookId(Long bookId) {
 		Book book = bookRepository.findById(bookId)
 				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
-		List<Chapter> chapters = book.getChapters();
+		List<Chapter> chapters;
+		boolean isAuthor = authorizationService.checkBookOwnership(bookId);
+		if(isAuthor) {
+			chapters = book.getChapters();
+		}
+		else {
+			chapters = book.getChapters().stream().filter(chapter -> chapter.getIsPublished() == true).toList();
+		}
 		return chapters.stream().map(chapter -> modelMapper.map(chapter, ChapterResponseDTO.class)).toList();
 	}
 
@@ -66,6 +76,15 @@ public class ChapterServiceImpl implements ChapterService{
 	@Override
 	public void deleteChapterById(Long chapterId) {
 		chapterRepository.deleteById(chapterId);
+		
+	}
+	
+	@Override
+	public void publishChapter(Long chapterId) {
+		Chapter updatedChapter = chapterRepository.findById(chapterId)
+				.orElseThrow(() -> new EntityNotFoundException("Chapter not found with id: " + chapterId));
+		updatedChapter.setIsPublished(true);
+		chapterRepository.save(updatedChapter);
 		
 	}
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.demoproject.DTO.requests.BookRequestDTO;
 import com.example.demoproject.DTO.requests.BookUpdateRequestDTO;
 import com.example.demoproject.DTO.responses.BookResponseDTO;
+import com.example.demoproject.config.security.AuthorizationService;
 import com.example.demoproject.dao.BookRepository;
 import com.example.demoproject.dao.UserRepository;
 import com.example.demoproject.model.Book;
@@ -26,6 +27,7 @@ public class BookServiceImpl implements BookService{
 	private final BookRepository bookRepository;
 	private final UserRepository userRepository;
 	private final ModelMapper modelMapper;
+	private final AuthorizationService authorizationService;
 
 	@Override
 	public BookResponseDTO createBook(Long userId, BookRequestDTO bookRequestDTO) {
@@ -43,12 +45,29 @@ public class BookServiceImpl implements BookService{
 	public BookResponseDTO getBookById(Long bookId) {
 		Book book = bookRepository.findById(bookId)
 				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
+		
+		//filter unpublished chapters if user is not author or admin
+		if(!authorizationService.checkBookOwnership(bookId)) {
+			book.setChapters(book.getChapters().stream()
+					.filter(chapter -> chapter.getIsPublished() == true).toList());
+		}
 		return modelMapper.map(book, BookResponseDTO.class);
 	}
 
 	@Override
 	public List<BookResponseDTO> getAllBooks() {
 		List<Book> books = bookRepository.findAll();
+		
+		//filter unpublished chapters for each book if user is not author or admin
+		books = books.stream().map(book -> {
+			Long currentUserId = authorizationService.getUserIdFromUsername();
+			boolean isAuthor = currentUserId.equals(
+					book.getUser().getUserId()) || authorizationService.isCurrentAdmin();
+			
+			book.setChapters(book.getChapters().stream()
+					.filter(chapter -> chapter.getIsPublished() == true || isAuthor).toList());
+			return book;
+		}).toList();
 		return books.stream().map(book -> modelMapper.map(book, BookResponseDTO.class)).toList();
 	}
 

@@ -36,6 +36,7 @@ public class Chapter {
     private LocalDateTime creationDate;
     @UpdateTimestamp
     private LocalDateTime updateDate;
+    private Boolean isPublished;
     
     @ManyToOne
     @JoinColumn(name = "book_id")

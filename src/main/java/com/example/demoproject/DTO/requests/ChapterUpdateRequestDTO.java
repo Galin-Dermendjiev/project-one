@@ -11,4 +11,5 @@ public class ChapterUpdateRequestDTO {
 	private Long id;
 	private String title;
     private String content;
+    private Boolean isPublished;
 }

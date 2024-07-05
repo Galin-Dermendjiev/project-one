@@ -16,4 +16,6 @@ public interface ChapterService {
     ChapterResponseDTO updateChapter(ChapterUpdateRequestDTO chapterRequestDTO);
     
     void deleteChapterById(Long chapterId);
+    
+    void publishChapter(Long chapterId);
 }

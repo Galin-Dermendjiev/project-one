@@ -16,6 +16,7 @@ public class ChapterResponseDTO {
     private String content;
     private LocalDateTime creationDate;
     private LocalDateTime updateDate;
+    private Boolean isPublished;
     
     private BookMinimalResponseDTO book;  
     private List<RatingResponseDTO> ratings;

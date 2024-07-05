@@ -55,5 +55,12 @@ public class ChapterController {
         chapterService.deleteChapterById(chapterId);
         return ResponseEntity.ok().build();
     }
+    
+    @PutMapping("/publish/{chapterId}")
+    @PreAuthorize("@authorizationService.checkChapterOwnership(#chapterId)")
+    public ResponseEntity<Void> publishChapterById(@PathVariable Long chapterId){
+    	chapterService.publishChapter(chapterId);
+    	return ResponseEntity.ok().build();
+    }
 }
 
