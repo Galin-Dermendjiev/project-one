@@ -81,6 +81,30 @@ public class UserRepositoryTests {
 		assertFalse(deletedUser.isPresent());
 	}
 	
+	@Test
+    public void userRepository_FindByUsername() {
+        User user = new User(null, "ivan", "ivan@gmail.com", "12345", "", "",
+                LocalDateTime.now(), null, null, null, null, Role.USER);
+
+        User savedUser = userRepository.save(user);
+
+        Optional<User> foundUser = userRepository.findByUsername(savedUser.getUsername());
+
+        assertTrue(foundUser.isPresent());
+        assertEquals(savedUser.getUsername(), foundUser.get().getUsername());
+    }
+	
+	@Test
+    public void userRepository_ExistsByRole() {
+        User user = new User(null, "ivan", "ivan@gmail.com", "12345", "", "",
+                LocalDateTime.now(), null, null, null, null, Role.ADMIN);
+
+        User savedUser = userRepository.save(user);
+
+        Boolean foundUser = userRepository.existsByRole(savedUser.getRole());
+
+        assertTrue(foundUser);
+    }
 }
 
 //private Long userId;

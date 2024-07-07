@@ -202,4 +202,65 @@ public class RatingRepositoryTests {
 
         assertFalse(foundRating.isPresent());
     }
+    
+    @Test
+    public void ratingRepository_FindByBookId_And_UserId() {
+        User user = new User(null, "ivan", "ivan@gmail.com", "12345", "", "",
+                LocalDateTime.now(), null, null, null, null, Role.USER);
+        userRepository.save(user);
+
+        Book book = new Book();
+        book.setTitle("Test Book");
+        book.setDescription("Test Description");
+        book.setGenre("Fiction");
+        book.setCoverImage("cover.jpg");
+        book.setUser(user);
+        bookRepository.save(book);
+
+        Rating rating = new Rating();
+        rating.setScore(4);
+        rating.setUser(user);
+        rating.setBook(book);
+        Rating savedRating = ratingRepository.save(rating);
+
+        Optional<Rating> foundRating = ratingRepository.findByUser_UserIdAndBook_BookId
+        		(savedRating.getUser().getUserId(), savedRating.getBook().getBookId());
+
+        assertTrue(foundRating.isPresent());
+        assertEquals(savedRating.getRatingId(), foundRating.get().getRatingId());
+    }
+    
+    @Test
+    public void ratingRepository_FindByChapterId_And_UserId() {
+        User user = new User(null, "ivan", "ivan@gmail.com", "12345", "", "",
+                LocalDateTime.now(), null, null, null, null, Role.USER);
+        userRepository.save(user);
+
+        Book book = new Book();
+        book.setTitle("Test Book");
+        book.setDescription("Test Description");
+        book.setGenre("Fiction");
+        book.setCoverImage("cover.jpg");
+        book.setUser(user);
+        bookRepository.save(book);
+        
+        Chapter chapter = new Chapter();
+        chapter.setTitle("Test Chapter");
+        chapter.setContent("Test chapter content.");
+        chapter.setIsPublished(true);
+        chapter.setBook(book);
+        chapterRepository.save(chapter);
+
+        Rating rating = new Rating();
+        rating.setScore(4);
+        rating.setUser(user);
+        rating.setChapter(chapter);
+        Rating savedRating = ratingRepository.save(rating);
+
+        Optional<Rating> foundRating = ratingRepository.findByUser_UserIdAndChapter_ChapterId
+        		(savedRating.getUser().getUserId(), savedRating.getChapter().getChapterId());
+
+        assertTrue(foundRating.isPresent());
+        assertEquals(savedRating.getRatingId(), foundRating.get().getRatingId());
+    }
 }
