@@ -1,5 +1,6 @@
 package com.example.demoproject.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -53,23 +54,23 @@ public class BookServiceImpl implements BookService{
 		}
 		return modelMapper.map(book, BookResponseDTO.class);
 	}
-
+	
 	@Override
 	public List<BookResponseDTO> getAllBooks() {
-		List<Book> books = bookRepository.findAll();
-		
-		//filter unpublished chapters for each book if user is not author or admin
-		books = books.stream().map(book -> {
-			Long currentUserId = authorizationService.getUserIdFromUsername();
-			boolean isAuthor = currentUserId.equals(
-					book.getUser().getUserId()) || authorizationService.isCurrentAdmin();
-			
-			book.setChapters(book.getChapters().stream()
-					.filter(chapter -> chapter.getIsPublished() == true || isAuthor).toList());
-			return book;
-		}).toList();
-		return books.stream().map(book -> modelMapper.map(book, BookResponseDTO.class)).toList();
+	    List<Book> books = bookRepository.findAll();
+	    Long currentUserId = authorizationService.getUserIdFromUsername();
+	    boolean isAdmin = authorizationService.isCurrentAdmin();
+
+	    books = books.stream()
+	            .map(book -> filterChapters(book, currentUserId, 
+	            		currentUserId.equals(book.getUser().getUserId()) || isAdmin))
+	            .toList();
+	    
+	    return books.stream()
+	            .map(book -> modelMapper.map(book, BookResponseDTO.class))
+	            .toList();
 	}
+
 
 	@Override
 	public BookResponseDTO updateBook(BookUpdateRequestDTO book) {
@@ -87,6 +88,9 @@ public class BookServiceImpl implements BookService{
 
 	@Override
 	public void deleteBookById(Long bookId) {
+		Book book = bookRepository.findById(bookId)
+				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
+		
 		bookRepository.deleteById(bookId);
 	}
 
@@ -97,6 +101,9 @@ public class BookServiceImpl implements BookService{
 		Book book = bookRepository.findById(bookId)
 				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
 		
+		if (user.getFavoriteBooks() == null) {
+	        user.setFavoriteBooks(new ArrayList<Book>());
+	    }
 		if(!user.getFavoriteBooks().contains(book)) {
 			user.getFavoriteBooks().add(book);
 			userRepository.save(user);
@@ -110,7 +117,7 @@ public class BookServiceImpl implements BookService{
 		Book book = bookRepository.findById(bookId)
 				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
 		
-		if(user.getFavoriteBooks().contains(book)) {
+		if(user.getFavoriteBooks() != null && user.getFavoriteBooks().contains(book)) {
 			user.getFavoriteBooks().remove(book);
 			userRepository.save(user);
 		}
@@ -120,6 +127,11 @@ public class BookServiceImpl implements BookService{
 	@Override
 	public List<BookResponseDTO> recommendBooksByGenre(Long userId) {
 	    User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+	    
+	    if (user.getFavoriteBooks() == null) {
+	        user.setFavoriteBooks(new ArrayList<>());
+	    }
+	    
 	    Set<String> favoriteGenres = user.getFavoriteBooks().stream()
                 .map(Book::getGenre)
                 .collect(Collectors.toSet());
@@ -131,5 +143,14 @@ public class BookServiceImpl implements BookService{
 	    return recommendedBooks.stream().map(book -> modelMapper.map(book, BookResponseDTO.class)).toList();
 	}
 
+
+	public Book filterChapters(Book book, Long currentUserId, boolean isAuthor) {
+	    if (book.getChapters() != null) {
+	        book.setChapters(book.getChapters().stream()
+	                .filter(chapter -> chapter.getIsPublished() || isAuthor)
+	                .toList());
+	    }
+	    return book;
+	}
 
 }
