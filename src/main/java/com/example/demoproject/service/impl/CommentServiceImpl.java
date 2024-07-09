@@ -97,6 +97,9 @@ public class CommentServiceImpl implements CommentService {
 
 	@Override
 	public void deleteCommentById(Long commentId) {
+		Comment comment = commentRepository.findById(commentId)
+				.orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+		
 		commentRepository.deleteById(commentId);
 	}
 
