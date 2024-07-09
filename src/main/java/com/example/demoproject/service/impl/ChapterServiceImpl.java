@@ -1,5 +1,6 @@
 package com.example.demoproject.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -50,14 +51,16 @@ public class ChapterServiceImpl implements ChapterService{
 	public List<ChapterResponseDTO> getAllChaptersByBookId(Long bookId) {
 		Book book = bookRepository.findById(bookId)
 				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
-		List<Chapter> chapters;
+		List<Chapter> chapters = new ArrayList<>();
 		boolean isAuthor = authorizationService.checkBookOwnership(bookId);
+		
 		if(isAuthor) {
 			chapters = book.getChapters();
 		}
 		else {
 			chapters = book.getChapters().stream().filter(chapter -> chapter.getIsPublished() == true).toList();
 		}
+
 		return chapters.stream().map(chapter -> modelMapper.map(chapter, ChapterResponseDTO.class)).toList();
 	}
 
@@ -75,6 +78,9 @@ public class ChapterServiceImpl implements ChapterService{
 
 	@Override
 	public void deleteChapterById(Long chapterId) {
+		Chapter chapter = chapterRepository.findById(chapterId)
+				.orElseThrow(() -> new EntityNotFoundException("Chapter not found with id: " + chapterId));
+
 		chapterRepository.deleteById(chapterId);
 		
 	}
